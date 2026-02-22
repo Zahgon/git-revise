@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.0
+
+* `git-revise` more efficiently discards output from silent commands (#99)
+* `git-rerere` support now correctly skips mismatched marker sizes (#95)
+* No longer change directory before invoking editor (#118)
+* Added support for ssh commit signing (#136)
+
 ## v0.7.0
 
 * Add support for `git-rerere`, to record and replay conflict resolutions (#75)

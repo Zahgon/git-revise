@@ -72,6 +72,14 @@ def cut_after_scissors(lines: list[bytes], commentchar: bytes) -> list[bytes]:
     pass
 
 
+def is_comment_line(line: bytes) -> bool:
+    pass
+
+
+def is_comment_line(line: bytes) -> bool:
+    pass
+
+
 def strip_comments(
     lines: list[bytes], commentchar: bytes, allow_preceding_whitespace: bool
 ) -> list[bytes]:

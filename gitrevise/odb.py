@@ -34,6 +34,8 @@ if TYPE_CHECKING:
     from subprocess import _FILE
 
     from typing_extensions import Self
+from .utils import sh_run
+from .merge import rebase as _rebase
 
 
 class MissingObject(Exception):
@@ -51,6 +53,10 @@ class GPGSignError(Exception):
 
 
 T = TypeVar("T")  # pylint: disable=invalid-name
+
+
+def entry_key(pair) -> bytes:
+    pass
 
 
 class Oid(bytes):
@@ -267,16 +273,12 @@ class Repository:
 
     def sign_buffer(self, buffer: bytes) -> bytes:
         """Return the text of the signed commit object."""
-        from .utils import sh_run
         pass
 
     def new_tree(self, entries: Mapping[bytes, Entry]) -> Tree:
         """Directly create an in-memory tree object, without persisting it.
         If a tree object with these entries already exists, it will be
         returned instead."""
-
-        def entry_key(pair) -> bytes:
-            pass
 
         pass
 
@@ -431,7 +433,6 @@ class Commit(GitObj):
     def rebase(self, parent: Optional[Commit]) -> Commit:
         """Create a new commit with the same changes, except with ``parent``
         as its parent. If ``parent`` is ``None``, this becomes a root commit."""
-        from .merge import rebase
         pass
 
     def update(

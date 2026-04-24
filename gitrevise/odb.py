@@ -53,8 +53,6 @@ class GPGSignError(Exception):
 T = TypeVar("T")  # pylint: disable=invalid-name
 
 
-def entry_key(pair) -> bytes:
-    pass
 
 
 class Oid(bytes):
@@ -278,6 +276,9 @@ class Repository:
         """Directly create an in-memory tree object, without persisting it.
         If a tree object with these entries already exists, it will be
         returned instead."""
+
+        def entry_key(pair) -> bytes:
+            pass
 
         pass
 

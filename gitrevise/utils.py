@@ -31,24 +31,7 @@ class EditorCleanupMode(Enum):
 
     @property
     def comment(self) -> str:
-        return {
-            EditorCleanupMode.STRIP: (
-                "Please enter the commit message for your changes. Lines starting\n"
-                "with '#' will be ignored, and an empty message aborts the commit.\n"
-            ),
-            EditorCleanupMode.SCISSORS: (
-                f"{GIT_SCISSOR_LINE_WITHOUT_COMMENT_CHAR}"
-                "Do not modify or remove the line above.\n"
-                "Everything below it will be ignored.\n"
-            ),
-        }.get(
-            self,
-            (
-                "Please enter the commit message for your changes. Lines starting\n"
-                "with '#' will be kept; you may remove them yourself if you want to.\n"
-                "An empty message aborts the commit.\n"
-            ),
-        )
+        pass
 
     @classmethod
     def from_repository(cls, repo: Repository) -> EditorCleanupMode:

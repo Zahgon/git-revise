@@ -80,9 +80,7 @@ class Oid(bytes):
     @classmethod
     def for_object(cls, tag: str, body: bytes) -> Oid:
         """Hash an object with the given type tag and body to determine its Oid"""
-        hasher = hashlib.sha1()
-        hasher.update(tag.encode() + b" " + str(len(body)).encode() + b"\0" + body)
-        return cls(hasher.digest())
+        pass
 
     def __repr__(self) -> str:
         return self.hex()
@@ -111,37 +109,27 @@ class Signature(bytes):
     @property
     def name(self) -> bytes:
         """user name"""
-        match = self.sig_re.fullmatch(self)
-        assert match, "invalid signature"
-        return match.group("name").strip()
+        pass
 
     @property
     def email(self) -> bytes:
         """user email"""
-        match = self.sig_re.fullmatch(self)
-        assert match, "invalid signature"
-        return match.group("email").strip()
+        pass
 
     @property
     def signing_key(self) -> bytes:
         """user name <email>"""
-        match = self.sig_re.fullmatch(self)
-        assert match, "invalid signature"
-        return match.group("signing_key").strip()
+        pass
 
     @property
     def timestamp(self) -> bytes:
         """unix timestamp"""
-        match = self.sig_re.fullmatch(self)
-        assert match, "invalid signature"
-        return match.group("timestamp").strip()
+        pass
 
     @property
     def offset(self) -> bytes:
         """timezone offset from UTC"""
-        match = self.sig_re.fullmatch(self)
-        assert match, "invalid signature"
-        return match.group("offset").strip()
+        pass
 
 
 class Repository:
@@ -261,10 +249,7 @@ class Repository:
             return default
 
     def int_config(self, config: str, default: T) -> Union[int, T]:
-        try:
-            return int(self.git("config", "--get", "--int", config))
-        except CalledProcessError:
-            return default
+        pass
 
     def __enter__(self) -> Repository:
         return self
@@ -401,12 +386,7 @@ class Repository:
         returned instead."""
 
         def entry_key(pair: Tuple[bytes, Entry]) -> bytes:
-            name, entry = pair
-            # Directories are sorted in the tree listing as though they have a
-            # trailing slash in their name.
-            if entry.mode == Mode.DIR:
-                return name + b"/"
-            return name
+            pass
 
         body = b""
         for name, entry in sorted(entries.items(), key=entry_key):
@@ -489,7 +469,7 @@ class Repository:
 
     def get_obj_ref(self, ref: str) -> Reference[GitObj]:
         """Get a :class:`Reference` to a :class:`GitObj`"""
-        return Reference(GitObj, self, ref)
+        pass
 
     def get_commit_ref(self, ref: str) -> Reference[Commit]:
         """Get a :class:`Reference` to a :class:`Commit`"""
@@ -497,11 +477,11 @@ class Repository:
 
     def get_tree_ref(self, ref: str) -> Reference[Tree]:
         """Get a :class:`Reference` to a :class:`Tree`"""
-        return Reference(Tree, self, ref)
+        pass
 
     def get_blob_ref(self, ref: str) -> Reference[Blob]:
         """Get a :class:`Reference` to a :class:`Blob`"""
-        return Reference(Blob, self, ref)
+        pass
 
 
 GitObjT = TypeVar("GitObjT", bound="GitObj")
@@ -603,27 +583,7 @@ class Commit(GitObj):
 
     def _parse_body(self) -> None:
         # Split the header from the core commit message.
-        hdrs, self.message = self.body.split(b"\n\n", maxsplit=1)
-
-        # Parse the header to populate header metadata fields.
-        self.parent_oids = []
-        for hdr in re.split(rb"\n(?! )", hdrs):
-            # Parse out the key-value pairs from the header, handling
-            # continuation lines.
-            key, value = hdr.split(maxsplit=1)
-            value = value.replace(b"\n ", b"\n")
-
-            self.gpgsig = None
-            if key == b"tree":
-                self.tree_oid = Oid.fromhex(value.decode())
-            elif key == b"parent":
-                self.parent_oids.append(Oid.fromhex(value.decode()))
-            elif key == b"author":
-                self.author = Signature(value)
-            elif key == b"committer":
-                self.committer = Signature(value)
-            elif key == b"gpgsig":
-                self.gpgsig = value
+        pass
 
     def tree(self) -> Tree:
         """``tree`` object corresponding to this commit"""
@@ -639,7 +599,7 @@ class Commit(GitObj):
     @property
     def is_root(self) -> bool:
         """Whether this commit has no parents"""
-        return not self.parent_oids
+        pass
 
     def parents(self) -> Sequence[Commit]:
         """List of parent commits"""
@@ -736,7 +696,7 @@ class Mode(Enum):
         return self in (Mode.REGULAR, Mode.EXEC)
 
     def comparable_to(self, other: Mode) -> bool:
-        return self == other or (self.is_file() and other.is_file())
+        pass
 
 
 class Entry:
@@ -799,14 +759,7 @@ class Tree(GitObj):
     __slots__ = ("entries",)
 
     def _parse_body(self) -> None:
-        self.entries = {}
-        rest = self.body
-        while rest:
-            mode, rest = rest.split(b" ", maxsplit=1)
-            name, rest = rest.split(b"\0", maxsplit=1)
-            entry_oid = Oid(rest[:20])
-            rest = rest[20:]
-            self.entries[name] = Entry(self.repo, Mode(mode), entry_oid)
+        pass
 
     def _persist_deps(self) -> None:
         for entry in self.entries.values():
@@ -948,17 +901,7 @@ class Reference(Generic[GitObjT]):  # pylint: disable=unsubscriptable-object
 
     def refresh(self) -> None:
         """Re-read the target of this reference from disk"""
-        try:
-            obj = self.repo.get_obj(self.name)
-
-            if not isinstance(obj, self._type):
-                raise ValueError(
-                    f"{type(obj).__name__} {self.name} is not a {self._type.__name__}!"
-                )
-
-            self.target = obj
-        except MissingObject:
-            self.target = None
+        pass
 
     def update(self, new: GitObjT, reason: str) -> None:
         """Update this refreence to point to a new object.

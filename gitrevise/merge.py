@@ -30,6 +30,12 @@ class MergeConflict(Exception):
 
 
 def rebase(commit: Commit, new_parent: Optional[Commit]) -> Commit:
+    def get_summary(cmt: Optional[Commit]) -> str:
+        pass
+
+    def get_tree(cmt: Optional[Commit]) -> Tree:
+        pass
+
     pass
 
 

@@ -66,16 +66,16 @@ class Oid(bytes):
     @classmethod
     def fromhex(cls, instr: str) -> Oid:
         """Parse an ``Oid`` from a hexadecimal string"""
-        return Oid(bytes.fromhex(instr))
+        pass
 
     @classmethod
     def null(cls) -> Oid:
         """An ``Oid`` consisting of entirely 0s"""
-        return cls(b"\0" * 20)
+        pass
 
     def short(self) -> str:
         """A shortened version of the Oid's hexadecimal form"""
-        return str(self)[:12]
+        pass
 
     @classmethod
     def for_object(cls, tag: str, body: bytes) -> Oid:
@@ -218,35 +218,13 @@ class Repository:
         stdout: _FILE = PIPE,
         trim_newline: bool = True,
     ) -> bytes:
-        if cwd is None:
-            cwd = getattr(self, "workdir", None)
-
-        cmd = ("git",) + cmd
-        prog = run(
-            cmd,
-            cwd=cwd,
-            env=env,
-            input=stdin,
-            stdout=stdout,
-            check=True,
-        )
-
-        if trim_newline and isinstance(prog.stdout, bytes):
-            if prog.stdout.endswith(b"\n"):
-                return prog.stdout[:-1]
-        return prog.stdout
+        pass
 
     def config(self, setting: str, default: T) -> Union[bytes, T]:
-        try:
-            return self.git("config", "--get", setting)
-        except CalledProcessError:
-            return default
+        pass
 
     def bool_config(self, config: str, default: T) -> Union[bool, T]:
-        try:
-            return self.git("config", "--get", "--bool", config) == b"true"
-        except CalledProcessError:
-            return default
+        pass
 
     def int_config(self, config: str, default: T) -> Union[int, T]:
         pass
@@ -268,16 +246,11 @@ class Repository:
 
     def get_tempdir(self) -> Path:
         """Return a temporary directory to use for modifications to this repository"""
-        if self._tempdir is None:
-            # Pylint 2.8 emits a false positive; fixed in 2.9.
-            self._tempdir = TemporaryDirectory(  # pylint: disable=consider-using-with
-                prefix="revise.", dir=str(self.gitdir)
-            )
-        return Path(self._tempdir.name)
+        pass
 
     def git_path(self, path: Union[str, Path]) -> Path:
         """Get the path to a file in the .git directory, respecting the environment"""
-        return self.workdir / self.git("rev-parse", "--git-path", str(path)).decode()
+        pass
 
     def new_commit(
         self,
@@ -290,182 +263,35 @@ class Repository:
         """Directly create an in-memory commit object, without persisting it.
         If a commit object with these properties already exists, it will be
         returned instead."""
-        if author is None:
-            author = self.default_author
-        if committer is None:
-            committer = self.default_committer
-
-        body = b"tree " + tree.oid.hex().encode() + b"\n"
-        for parent in parents:
-            body += b"parent " + parent.oid.hex().encode() + b"\n"
-        body += b"author " + author + b"\n"
-        body += b"committer " + committer + b"\n"
-
-        body_tail = b"\n" + message
-        body += self.sign_buffer(body + body_tail)
-        body += body_tail
-
-        return Commit(self, body)
+        pass
 
     def sign_buffer(self, buffer: bytes) -> bytes:
         """Return the text of the signed commit object."""
-        from .utils import sh_run  # pylint: disable=import-outside-toplevel
-
-        if not self.sign_commits:
-            return b""
-
-        key_id = self.config(
-            "user.signingKey", default=self.default_committer.signing_key
-        )
-        signer = None
-        if self.config("gpg.format", "gpg") == b"ssh":
-            program = self.config("gpg.ssh.program", b"ssh-keygen")
-            is_literal_ssh_key = key_id.startswith(b"ssh-") or key_id.startswith(
-                b"key::"
-            )
-            if is_literal_ssh_key and key_id.startswith(b"key::"):
-                key_id = key_id[5:]
-            if is_literal_ssh_key:
-                key_file_context_manager: AbstractContextManager[IO[bytes]] = (
-                    NamedTemporaryFile(  # pylint: disable=consider-using-with
-                        prefix=".git_signing_key_tmp"
-                    )
-                )
-            else:
-                key_file_context_manager = open(key_id, "rb")
-            with key_file_context_manager as key_file:
-                if is_literal_ssh_key:
-                    key_file.write(key_id)
-                    key_file.flush()
-                    key_id = key_file.name.encode("utf-8")
-                try:
-                    args = [program, "-Y", "sign", "-n", "git", "-f", key_id]
-                    if is_literal_ssh_key:
-                        args.append("-U")
-                    signer = sh_run(
-                        args, stdout=PIPE, stderr=PIPE, input=buffer, check=True
-                    )
-                except CalledProcessError as ssh:
-                    e = ssh.stderr.decode()
-                    print(e, file=sys.stderr, end="")
-                    print(f"{program.decode()} failed to sign commit", file=sys.stderr)
-                    if "usage:" in e:
-                        print(
-                            (
-                                "ssh-keygen -Y sign is needed for ssh signing "
-                                "(available in openssh version 8.2p1+)"
-                            ),
-                            file=sys.stderr,
-                        )
-                    raise
-        else:
-            try:
-                signer = sh_run(
-                    (self.gpg, "--status-fd=2", "-bsau", key_id),
-                    stdout=PIPE,
-                    stderr=PIPE,
-                    input=buffer,
-                    check=True,
-                )
-            except CalledProcessError as gpg:
-                print(gpg.stderr.decode(), file=sys.stderr, end="")
-                print("gpg failed to sign commit", file=sys.stderr)
-                raise
-
-            if b"\n[GNUPG:] SIG_CREATED " not in signer.stderr:
-                raise GPGSignError(signer.stderr.decode())
-
-        signature = b"gpgsig"
-        for line in signer.stdout.splitlines():
-            signature += b" " + line + b"\n"
-        return signature
+        pass
 
     def new_tree(self, entries: Mapping[bytes, Entry]) -> Tree:
         """Directly create an in-memory tree object, without persisting it.
         If a tree object with these entries already exists, it will be
         returned instead."""
 
-        def entry_key(pair: Tuple[bytes, Entry]) -> bytes:
-            pass
-
-        body = b""
-        for name, entry in sorted(entries.items(), key=entry_key):
-            body += cast(bytes, entry.mode.value) + b" " + name + b"\0" + entry.oid
-        return Tree(self, body)
+        pass
 
     def get_obj(self, ref: Union[Oid, str]) -> GitObj:
         """Get the identified git object from this repository. If given an
         :class:`Oid`, the cache will be checked before asking git."""
-        if isinstance(ref, Oid):
-            cache = self._objects[ref[0]]
-            if ref in cache:
-                return cache[ref]
-            ref = ref.hex()
-
-        # Satisfy mypy: otherwise these are Optional[IO[Any]].
-        (stdin, stdout) = (self._catfile.stdin, self._catfile.stdout)
-        assert stdin is not None
-        assert stdout is not None
-
-        # Write out an object descriptor.
-        stdin.write(ref.encode() + b"\n")
-        stdin.flush()
-
-        # Read in the response.
-        resp = stdout.readline().decode()
-        if resp.endswith("missing\n"):
-            # If we have an abbreviated hash, check for in-memory commits.
-            try:
-                abbrev = bytes.fromhex(ref)
-                for oid, obj in self._objects[abbrev[0]].items():
-                    if oid.startswith(abbrev):
-                        return obj
-            except (ValueError, IndexError):
-                pass
-
-            # Not an abbreviated hash, the entry is missing.
-            raise MissingObject(ref)
-
-        parts = resp.rsplit(maxsplit=2)
-        oid, kind, size = Oid.fromhex(parts[0]), parts[1], int(parts[2])
-        body = stdout.read(size + 1)[:-1]
-        assert size == len(body), "bad size?"
-
-        # Create a corresponding git object. This will re-use the item in the
-        # cache, if found, and add the item to the cache otherwise.
-        if kind == "commit":
-            obj = Commit(self, body)
-        elif kind == "tree":
-            obj = Tree(self, body)
-        elif kind == "blob":
-            obj = Blob(self, body)
-        else:
-            raise ValueError(f"Unknown object kind: {kind}")
-
-        obj.persisted = True
-        assert obj.oid == oid, "miscomputed oid"
-        return obj
+        pass
 
     def get_commit(self, ref: Union[Oid, str]) -> Commit:
         """Like :py:meth:`get_obj`, but returns a :class:`Commit`"""
-        obj = self.get_obj(ref)
-        if isinstance(obj, Commit):
-            return obj
-        raise ValueError(f"{type(obj).__name__} {ref} is not a Commit!")
+        pass
 
     def get_tree(self, ref: Union[Oid, str]) -> Tree:
         """Like :py:meth:`get_obj`, but returns a :class:`Tree`"""
-        obj = self.get_obj(ref)
-        if isinstance(obj, Tree):
-            return obj
-        raise ValueError(f"{type(obj).__name__} {ref} is not a Tree!")
+        pass
 
     def get_blob(self, ref: Union[Oid, str]) -> Blob:
         """Like :py:meth:`get_obj`, but returns a :class:`Blob`"""
-        obj = self.get_obj(ref)
-        if isinstance(obj, Blob):
-            return obj
-        raise ValueError(f"{type(obj).__name__} {ref} is not a Blob!")
+        pass
 
     def get_obj_ref(self, ref: str) -> Reference[GitObj]:
         """Get a :class:`Reference` to a :class:`GitObj`"""
@@ -473,7 +299,7 @@ class Repository:
 
     def get_commit_ref(self, ref: str) -> Reference[Commit]:
         """Get a :class:`Reference` to a :class:`Commit`"""
-        return Reference(Commit, self, ref)
+        pass
 
     def get_tree_ref(self, ref: str) -> Reference[Tree]:
         """Get a :class:`Reference` to a :class:`Tree`"""
@@ -524,27 +350,11 @@ class GitObj:
 
     @classmethod
     def _git_type(cls) -> str:
-        return cls.__name__.lower()
+        pass
 
     def persist(self) -> Oid:
         """If this object has not been persisted to disk yet, persist it"""
-        if self.persisted:
-            return self.oid
-
-        self._persist_deps()
-        new_oid = self.repo.git(
-            "hash-object",
-            "--no-filters",
-            "-t",
-            self._git_type(),
-            "-w",
-            "--stdin",
-            stdin=self.body,
-        )
-
-        assert Oid.fromhex(new_oid.decode()) == self.oid
-        self.persisted = True
-        return self.oid
+        pass
 
     def _persist_deps(self) -> None:
         pass
@@ -587,14 +397,12 @@ class Commit(GitObj):
 
     def tree(self) -> Tree:
         """``tree`` object corresponding to this commit"""
-        return self.repo.get_tree(self.tree_oid)
+        pass
 
     def parent_tree(self) -> Tree:
         """``tree`` object corresponding to the first parent of this commit,
         or the null tree if this is a root commit"""
-        if self.is_root:
-            return Tree(self.repo, b"")
-        return self.parents()[0].tree()
+        pass
 
     @property
     def is_root(self) -> bool:
@@ -603,30 +411,23 @@ class Commit(GitObj):
 
     def parents(self) -> Sequence[Commit]:
         """List of parent commits"""
-        return [self.repo.get_commit(parent) for parent in self.parent_oids]
+        pass
 
     def parent(self) -> Commit:
         """Helper method to get the single parent of a commit. Raises
         :class:`ValueError` if the incorrect number of parents are
         present."""
-        if len(self.parents()) != 1:
-            raise ValueError(f"Commit {self.oid} has {len(self.parents())} parents")
-        return self.parents()[0]
+        pass
 
     def summary(self) -> str:
         """The summary line of the commit message. Returns the summary
         as a single line, even if it spans multiple lines."""
-        summary_paragraph = self.message.split(b"\n\n", maxsplit=1)[0].decode(
-            errors="replace"
-        )
-        return " ".join(summary_paragraph.splitlines())
+        pass
 
     def rebase(self, parent: Optional[Commit]) -> Commit:
         """Create a new commit with the same changes, except with ``parent``
         as its parent. If ``parent`` is ``None``, this becomes a root commit."""
-        from .merge import rebase  # pylint: disable=import-outside-toplevel
-
-        return rebase(self, parent)
+        pass
 
     def update(
         self,
@@ -638,33 +439,10 @@ class Commit(GitObj):
     ) -> Commit:
         """Create a new commit with specific properties updated or replaced"""
         # Compute parameters used to create the new object.
-        if tree is None:
-            tree = self.tree()
-        if parents is None:
-            parents = self.parents()
-        if message is None:
-            message = self.message
-        if author is None:
-            author = self.author
-
-        if not recommit:
-            # Check if the commit was unchanged to avoid creating a new commit if
-            # only the committer has changed.
-            unchanged = (
-                tree == self.tree()
-                and parents == self.parents()
-                and message == self.message
-                and author == self.author
-            )
-            if unchanged:
-                return self
-
-        return self.repo.new_commit(tree, parents, message, author)
+        pass
 
     def _persist_deps(self) -> None:
-        self.tree().persist()
-        for parent in self.parents():
-            parent.persist()
+        pass
 
     def __repr__(self) -> str:
         return (
@@ -693,7 +471,7 @@ class Mode(Enum):
     """executable entry"""
 
     def is_file(self) -> bool:
-        return self in (Mode.REGULAR, Mode.EXEC)
+        pass
 
     def comparable_to(self, other: Mode) -> bool:
         pass
@@ -720,26 +498,19 @@ class Entry:
 
     def blob(self) -> Blob:
         """Get the data for this entry as a :class:`Blob`"""
-        if self.mode in (Mode.REGULAR, Mode.EXEC):
-            return self.repo.get_blob(self.oid)
-        return Blob(self.repo, b"")
+        pass
 
     def symlink(self) -> bytes:
         """Get the data for this entry as a symlink"""
-        if self.mode == Mode.SYMLINK:
-            return self.repo.get_blob(self.oid).body
-        return b"<non-symlink>"
+        pass
 
     def tree(self) -> Tree:
         """Get the data for this entry as a :class:`Tree`"""
-        if self.mode == Mode.DIR:
-            return self.repo.get_tree(self.oid)
-        return Tree(self.repo, b"")
+        pass
 
     def persist(self) -> None:
         """:py:meth:`GitObj.persist` the git object referenced by this entry"""
-        if self.mode != Mode.GITLINK:
-            self.repo.get_obj(self.oid).persist()
+        pass
 
     def __repr__(self) -> str:
         return f"<Entry {self.mode}, {self.oid}>"
@@ -762,34 +533,13 @@ class Tree(GitObj):
         pass
 
     def _persist_deps(self) -> None:
-        for entry in self.entries.values():
-            entry.persist()
+        pass
 
     def to_index(self, path: Path, skip_worktree: bool = False) -> Index:
         """Read tree into a temporary index. If skip_workdir is ``True``, every
         entry in the index will have its "Skip Workdir" bit set."""
 
-        index = Index(self.repo, path)
-        self.repo.git(
-            "read-tree",
-            "--index-output=" + str(path),
-            self.persist().hex(),
-            stdout=DEVNULL,
-        )
-
-        # If skip_worktree is set, mark every file as --skip-worktree.
-        if skip_worktree:
-            # XXX(nika): Could be done with a pipe, which might improve perf.
-            files = index.git("ls-files")
-            index.git(
-                "update-index",
-                "--skip-worktree",
-                "--stdin",
-                stdin=files,
-                stdout=DEVNULL,
-            )
-
-        return index
+        pass
 
     def __repr__(self) -> str:
         return f"<Tree {self.oid} ({len(self.entries)} entries)>"
@@ -832,21 +582,11 @@ class Index:
         trim_newline: bool = True,
     ) -> bytes:
         """Invoke git with the given index as active"""
-        env = {**env} if env is not None else {**os.environ}
-        env["GIT_INDEX_FILE"] = str(self.index_file)
-        return self.repo.git(
-            *cmd,
-            cwd=cwd,
-            env=env,
-            stdin=stdin,
-            stdout=stdout,
-            trim_newline=trim_newline,
-        )
+        pass
 
     def tree(self) -> Tree:
         """Get a :class:`Tree` object for this index's state"""
-        oid = Oid.fromhex(self.git("write-tree").decode())
-        return self.repo.get_tree(oid)
+        pass
 
     def commit(
         self, message: bytes = b"<git index>", parent: Optional[Commit] = None
@@ -854,10 +594,7 @@ class Index:
         """Get a :class:`Commit` for this index's state. If ``parent`` is
         ``None``, use the current ``HEAD``"""
 
-        if parent is None:
-            parent = self.repo.get_commit("HEAD")
-
-        return self.repo.new_commit(self.tree(), [parent], message)
+        pass
 
 
 class Reference(Generic[GitObjT]):  # pylint: disable=unsubscriptable-object
@@ -906,10 +643,4 @@ class Reference(Generic[GitObjT]):  # pylint: disable=unsubscriptable-object
     def update(self, new: GitObjT, reason: str) -> None:
         """Update this refreence to point to a new object.
         An entry with the reason ``reason`` will be added to the reflog."""
-        new.persist()
-        args = ["update-ref", "-m", reason, self.name, str(new.oid)]
-        if self.target is not None:
-            args.append(str(self.target.oid))
-
-        self.repo.git(*args, stdout=DEVNULL)
-        self.target = new
+        pass

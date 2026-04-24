@@ -34,8 +34,6 @@ if TYPE_CHECKING:
     from subprocess import _FILE
 
     from typing_extensions import Self
-from .utils import sh_run
-from .merge import rebase as _rebase
 
 
 class MissingObject(Exception):
@@ -273,6 +271,7 @@ class Repository:
 
     def sign_buffer(self, buffer: bytes) -> bytes:
         """Return the text of the signed commit object."""
+        from .utils import sh_run  # pylint: disable=import-outside-toplevel
         pass
 
     def new_tree(self, entries: Mapping[bytes, Entry]) -> Tree:
@@ -433,6 +432,7 @@ class Commit(GitObj):
     def rebase(self, parent: Optional[Commit]) -> Commit:
         """Create a new commit with the same changes, except with ``parent``
         as its parent. If ``parent`` is ``None``, this becomes a root commit."""
+        from .merge import rebase  # pylint: disable=import-outside-toplevel
         pass
 
     def update(
